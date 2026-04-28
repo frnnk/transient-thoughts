@@ -1,0 +1,22 @@
+[project]
+name = "transient-thoughts"
+version = "0.1.0"
+description = "A small journaling app that periodically prompts for quick, transient thoughts."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+dependencies = [
+    "pystray>=0.19",
+    "plyer>=2.1",
+    "Pillow>=9.0",
+]
+
+[project.scripts]
+transient-thoughts = "transient_thoughts.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["transient_thoughts"]
