@@ -3,23 +3,40 @@ System tray icon (pystray) and unintrusive Windows toast notifications (plyer).
 """
 
 import pystray
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 from plyer import notification
 
 from transient_thoughts import config
 
+# Palette mirrored from ui.py so the tray reads as part of the same set.
+_RING = "#D9D4C7"   # light tan outer ring
+_DOT = "#8A8680"    # muted gray-tan center dot (visible on light + dark taskbars)
+
 
 def _create_icon_image():
-    img = Image.new("RGB", (64, 64), "#5B8C5A")
+    """A soft tan ring with a muted center dot — visual echo of the panel's
+    header bullet. Drawn supersampled and downsampled so the circles stay smooth
+    at the tray's 16x16 render size."""
+    size = 64
+    scale = 4
+    big_size = size * scale
+    img = Image.new("RGBA", (big_size, big_size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-    try:
-        font = ImageFont.truetype("arial.ttf", 36)
-    except OSError:
-        font = ImageFont.load_default()
-    bbox = draw.textbbox((0, 0), "T", font=font)
-    tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-    draw.text(((64 - tw) / 2, (64 - th) / 2 - bbox[1]), "T", fill="white", font=font)
-    return img
+
+    ring_pad = 6 * scale
+    ring_width = 3 * scale
+    draw.ellipse(
+        [ring_pad, ring_pad, big_size - ring_pad, big_size - ring_pad],
+        outline=_RING, width=ring_width,
+    )
+
+    dot_pad = 22 * scale
+    draw.ellipse(
+        [dot_pad, dot_pad, big_size - dot_pad, big_size - dot_pad],
+        fill=_DOT,
+    )
+
+    return img.resize((size, size), Image.LANCZOS)
 
 
 class TrayIcon:

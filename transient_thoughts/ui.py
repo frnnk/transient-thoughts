@@ -8,6 +8,7 @@ italic for the thought itself.
 
 import sys
 import tkinter as tk
+from tkinter import ttk
 from datetime import datetime, timezone
 
 # Palette lifted from the prototype sketch.
@@ -152,10 +153,11 @@ def show_viewer_window(entries):
     root = tk.Tk()
     scale = _tk_dpi_scale(root)
     root.title("Transient Thoughts — All Entries")
-    root.geometry(f"{int(640 * scale)}x{int(480 * scale)}")
+    root.overrideredirect(True)
     root.attributes("-topmost", True)
     root.configure(bg=CARD_BG)
 
+    # White card with the same thin tan border as the input panel.
     card = tk.Frame(
         root, bg=CARD_BG,
         highlightthickness=1,
@@ -164,40 +166,93 @@ def show_viewer_window(entries):
     )
     card.pack(fill=tk.BOTH, expand=True)
 
-    scrollbar = tk.Scrollbar(card)
+    # Header: dot + count label. Doubles as a drag handle since there's no title bar.
+    header = tk.Frame(card, bg=CARD_BG, cursor="fleur")
+    header.pack(side=tk.TOP, fill=tk.X, padx=18, pady=(16, 0))
+
+    dot_px = max(8, int(10 * scale))
+    dot = tk.Canvas(
+        header, width=dot_px, height=dot_px,
+        bg=CARD_BG, highlightthickness=0, cursor="fleur",
+    )
+    dot.create_oval(1, 1, dot_px - 1, dot_px - 1, fill=DOT_COLOR, outline=DOT_COLOR)
+    dot.pack(side=tk.LEFT, padx=(0, 8))
+
+    count_label = tk.Label(
+        header,
+        text=f"all thoughts ({len(entries)})",
+        bg=CARD_BG, fg=MUTED_TEXT, font=FONT_HELV_META,
+        cursor="fleur",
+    )
+    count_label.pack(side=tk.LEFT)
+
+    # Hint footer (matches the input panel's chrome).
+    tk.Label(
+        card,
+        text="esc to close  ·  drag header to move  ·  ↑↓ to scroll",
+        bg=CARD_BG, fg=MUTED_TEXT, font=FONT_HELV_META,
+    ).pack(side=tk.BOTTOM, anchor="w", padx=18, pady=(8, 16))
+
+    # Body: scrollable Text with a ttk scrollbar.
+    body = tk.Frame(card, bg=CARD_BG)
+    body.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=18, pady=(14, 10))
+
+    scrollbar = ttk.Scrollbar(body)
     scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
     text = tk.Text(
-        card,
+        body,
         wrap=tk.WORD,
         bg=CARD_BG, fg=DARK_TEXT,
         font=FONT_GEORGIA_ENTRY,
         yscrollcommand=scrollbar.set,
-        state=tk.NORMAL,
         relief=tk.FLAT, bd=0,
         highlightthickness=0,
-        padx=20, pady=16,
-        spacing1=2, spacing3=10,
+        padx=0, pady=0,
+        spacing1=2, spacing3=4,
     )
-    text.pack(fill=tk.BOTH, expand=True)
+    text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
     scrollbar.config(command=text.yview)
 
-    text.tag_configure("ts", font=FONT_HELV_META, foreground=MUTED_TEXT, spacing1=10)
+    # First timestamp sits flush with the top; subsequent ones get extra spacing
+    # above to separate entries visually.
+    text.tag_configure("ts", font=FONT_HELV_META, foreground=MUTED_TEXT, spacing1=18, spacing3=4)
+    text.tag_configure("ts_first", font=FONT_HELV_META, foreground=MUTED_TEXT, spacing1=0, spacing3=4)
     text.tag_configure("body", font=FONT_GEORGIA_ENTRY, foreground=DARK_TEXT)
 
     if not entries:
         text.insert(tk.END, "No thoughts recorded yet.", "body")
     else:
-        for _id, timestamp, thought in entries:
+        for idx, (_id, timestamp, thought) in enumerate(entries):
             try:
                 dt = datetime.fromisoformat(timestamp).replace(tzinfo=timezone.utc)
                 display_ts = dt.astimezone().strftime("%Y-%m-%d %H:%M")
             except ValueError:
                 display_ts = timestamp
-            text.insert(tk.END, f"{display_ts}\n", "ts")
-            text.insert(tk.END, f"{thought}\n\n", "body")
+            text.insert(tk.END, f"{display_ts}\n", "ts_first" if idx == 0 else "ts")
+            text.insert(tk.END, f"{thought}\n", "body")
 
     text.config(state=tk.DISABLED)
 
+    # Drag-to-move from the header strip (text/scrollbar keep normal interactions).
+    drag = {"x": 0, "y": 0}
+    def start_drag(e):
+        drag["x"] = e.x_root - root.winfo_x()
+        drag["y"] = e.y_root - root.winfo_y()
+    def do_drag(e):
+        root.geometry(f"+{e.x_root - drag['x']}+{e.y_root - drag['y']}")
+    for widget in (header, dot, count_label):
+        widget.bind("<Button-1>", start_drag)
+        widget.bind("<B1-Motion>", do_drag)
+
+    # Size and center.
+    w, h = int(640 * scale), int(480 * scale)
+    sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
+    root.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}")
+
     root.bind("<Escape>", lambda e: root.destroy())
+    
+    # Up/Down arrow scrolling on top of the existing wheel + scrollbar mechanics.
+    root.bind("<Up>", lambda e: text.yview_scroll(-1, "units"))
+    root.bind("<Down>", lambda e: text.yview_scroll(1, "units"))
     root.mainloop()
