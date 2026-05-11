@@ -101,7 +101,6 @@ def show_input_window(on_submit, on_view=None, on_quit=None):
         highlightthickness=0,
     )
     text_widget.pack(side=tk.TOP, fill=tk.X, padx=18, pady=(22, 20))
-    text_widget.focus_set()
 
     tk.Label(
         card,
@@ -144,6 +143,13 @@ def show_input_window(on_submit, on_view=None, on_quit=None):
     h = root.winfo_reqheight()
     sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
     root.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}")
+
+    # Grab OS-level focus (tray-icon callbacks don't auto-focus on Windows), then
+    # direct the keyboard focus to the text widget so the user can type immediately.
+    def grab_focus():
+        root.focus_force()
+        text_widget.focus_set()
+    root.after(10, grab_focus)
 
     root.mainloop()
 
