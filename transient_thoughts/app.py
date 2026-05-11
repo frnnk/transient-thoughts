@@ -42,7 +42,11 @@ class TransientThoughtsApp:
 
         def _run():
             try:
-                ui.show_input_window(self._on_submit)
+                ui.show_input_window(
+                    self._on_submit,
+                    on_view=self._on_view,
+                    on_quit=self._on_quit,
+                )
             finally:
                 self._prompt_lock.release()
 
