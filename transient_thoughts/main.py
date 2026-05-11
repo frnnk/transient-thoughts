@@ -14,8 +14,8 @@ def main():
     parser.add_argument(
         "--interval",
         type=int,
-        default=config.DEFAULT_INTERVAL_MINUTES,
-        help=f"Minutes between notification prompts (default: {config.DEFAULT_INTERVAL_MINUTES})",
+        default=None,
+        help="Override the stored interval (minutes between prompts) and persist it",
     )
     parser.add_argument(
         "--view",

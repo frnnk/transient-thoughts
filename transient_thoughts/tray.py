@@ -40,20 +40,24 @@ def _create_icon_image():
 
 
 class TrayIcon:
-    def __init__(self, on_prompt, on_view, on_quit):
+    def __init__(self, on_prompt, on_view, on_quit, on_settings=None):
         self._on_prompt = on_prompt
         self._on_view = on_view
+        self._on_settings = on_settings
         self._on_quit = on_quit
+        items = [
+            pystray.MenuItem("Open Prompt", self._handle_prompt, default=True),
+            pystray.MenuItem("View Entries", self._handle_view),
+        ]
+        if on_settings is not None:
+            items.append(pystray.MenuItem("Settings", self._handle_settings))
+        items.append(pystray.Menu.SEPARATOR)
+        items.append(pystray.MenuItem("Quit", self._handle_quit))
         self._icon = pystray.Icon(
             name="transient_thoughts",
             icon=_create_icon_image(),
             title=config.APP_NAME,
-            menu=pystray.Menu(
-                pystray.MenuItem("Open Prompt", self._handle_prompt, default=True),
-                pystray.MenuItem("View Entries", self._handle_view),
-                pystray.Menu.SEPARATOR,
-                pystray.MenuItem("Quit", self._handle_quit),
-            ),
+            menu=pystray.Menu(*items),
         )
 
     # tray callback stubs
@@ -61,6 +65,9 @@ class TrayIcon:
         self._on_prompt()
     def _handle_view(self, icon, item):
         self._on_view()
+    def _handle_settings(self, icon, item):
+        if self._on_settings is not None:
+            self._on_settings()
     def _handle_quit(self, icon, item):
         self._on_quit()
 
