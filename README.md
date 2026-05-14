@@ -4,9 +4,7 @@ A small journaling app that periodically prompts for quick, transient thoughts: 
 
 ## What it does
 
-Sits quietly in your system tray. Every so often, an unintrusive Windows toast appears reminding you to jot something down. Open the prompt — from the toast, the tray icon, or a keyboard shortcut — type a thought, hit Enter, and it's filed away. Past entries are timestamped and viewable any time.
-
-The visual design follows a prototype sketch: a clean white card with a thin tan border, lowercase Helvetica for chrome (timestamps, hints), and Georgia italic for the thought itself.
+Sits quietly in your system tray. Every so often, an unintrusive Windows toast appears reminding you to jot something down. Open the prompt from the toast, the tray icon, or a keyboard shortcut, type a thought, hit Enter, and it's filed away. Past entries are timestamped and viewable any time.
 
 ## Features
 
@@ -17,20 +15,19 @@ The visual design follows a prototype sketch: a clean white card with a thin tan
 - Enter saves, Escape cancels
 
 **Browse**
-- Dedicated "View Entries" panel — borderless white card, draggable, scrollable
-- Helvetica timestamps + Georgia entries
+- Dedicated "View Entries" panel: draggable, scrollable
 
 **Configure**
 - Settings panel for prompt frequency, notifications on/off, panel placement, and quiet hours (with timezone)
 - Settings persist as JSON between launches
 
 **Toast notifications (Windows)**
-- Native Windows 10/11 toast via WinRT — shows our app name ("Transient Thoughts") and our app icon (a soft tan ring with a muted center dot)
+- Native Windows 10/11 toast via WinRT, attributed to our app name ("Transient Thoughts") and app icon
 - Clicking the toast opens the prompt panel directly
 
 **Lifecycle**
 - Ctrl+C in the terminal triggers the same graceful shutdown path as the tray's Quit menu
-- DPI-aware rendering so fonts stay crisp on hi-DPI displays
+- DPI-aware rendering on hi-DPI displays
 
 ## Keyboard shortcuts
 
@@ -62,7 +59,7 @@ Reachable from the tray menu (right-click → Settings), or `Ctrl+S` inside eith
 | **quiet hours** | Suppress notifications between two hours (24-hour clock); wraps midnight cleanly (e.g. 22 → 7) |
 | **hours timezone** | Interpret quiet-hours bounds in `local` time, `UTC`, or a specific IANA zone (Americas, Europe, Asia, Pacific) |
 
-Settings are stored at `%APPDATA%\transient-thoughts\settings.json` and reloaded into the running app on save — no restart needed.
+Settings are stored at `%APPDATA%\transient-thoughts\settings.json` and reloaded into the running app on save; no restart needed.
 
 ## Architecture
 
@@ -110,6 +107,8 @@ flowchart TB
 Solid arrows are code dependencies (imports). Dotted arrows are runtime flow: the toast nudges the user; clicking the toast or the tray icon invokes a callback on the orchestrator, which spawns a tkinter window in a daemon thread. Submitted text flows into storage; settings changes flow into `settings.json` and back into the running `TransientThoughtsApp` instance.
 
 ## Installation
+
+> **Note:** A native installation path for non-developers is pending. For now, installation requires the developer toolchain below.
 
 Requires [`uv`](https://docs.astral.sh/uv/) and Python ≥3.10.
 

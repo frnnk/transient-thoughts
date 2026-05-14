@@ -1,5 +1,10 @@
 # Custom
 a-digital-journal.pptx
+_curve_samples/
+_poster_assets/
+_poster*
+generate_*
+transient-thoughts-poster*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
