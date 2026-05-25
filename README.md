@@ -110,24 +110,36 @@ Solid arrows are code dependencies (imports). Dotted arrows are runtime flow: th
 
 ## Installation
 
-> **Note:** A native installation path for non-developers is pending. For now, installation requires the developer toolchain below.
-
 Requires [`uv`](https://docs.astral.sh/uv/) and Python ≥3.10.
 
-**Dev workflow** (run from the repo, picks up code changes immediately):
+**Install from GitHub** (callable from anywhere as `transient-thoughts`):
 
 ```bash
+uv tool install --reinstall git+https://github.com/frnnk/transient-thoughts
+```
+
+Re-run the same command anytime to pull the latest commit. `--reinstall` is what forces uv to rebuild from source — without it, a second run sees the tool is already installed and does nothing, leaving you on the old code. The flag is harmless on a first install.
+
+After installing, `uv` will tell you if its bin directory isn't on `PATH` yet; follow its hint (typically `uv tool update-shell` and restart your terminal) so the `transient-thoughts` command is reachable.
+
+**Run at every login** (Windows, no terminal window):
+
+```bash
+transient-thoughts --setup-startup
+```
+
+Registers the `transient-thoughts-gui` wrapper under `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`. It launches against `pythonw.exe` so no console flashes at login. Visible (and disable-able) under **Task Manager → Startup apps**. Undo with `transient-thoughts --remove-startup`.
+
+**Dev workflow** (run from a local clone, picks up code changes immediately, no install needed):
+
+```bash
+git clone https://github.com/frnnk/transient-thoughts
+cd transient-thoughts
 uv sync
 uv run transient-thoughts
 ```
 
-**Daily-use install** (callable from anywhere as `transient-thoughts`):
-
-```bash
-uv tool install --from . transient-thoughts
-```
-
-To uninstall: `uv tool uninstall transient-thoughts`.
+**Uninstall**: `uv tool uninstall transient-thoughts` (and `--remove-startup` first if you registered it).
 
 ## Usage
 
@@ -135,6 +147,8 @@ To uninstall: `uv tool uninstall transient-thoughts`.
 transient-thoughts                    # use the persisted interval (default 30 min)
 transient-thoughts --interval 5       # override and persist the interval to settings
 transient-thoughts --view             # print all entries to stdout, then exit
+transient-thoughts --setup-startup    # (Windows) launch silently at every login
+transient-thoughts --remove-startup   # undo --setup-startup
 ```
 
 Once running, the app lives in the tray. Right-click the tray icon for **Open Prompt**, **View Entries**, **Settings**, or **Quit**; left-click is shorthand for Open Prompt.

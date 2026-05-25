@@ -22,7 +22,29 @@ def main():
         action="store_true",
         help="Print all entries to stdout and exit",
     )
+    parser.add_argument(
+        "--setup-startup",
+        action="store_true",
+        help="(Windows) Register the app to launch silently at login. Exits after.",
+    )
+    parser.add_argument(
+        "--remove-startup",
+        action="store_true",
+        help="(Windows) Remove the login-startup registration. Exits after.",
+    )
     args = parser.parse_args()
+
+    if args.setup_startup:
+        from transient_thoughts import startup
+        ok, msg = startup.register()
+        print(msg)
+        sys.exit(0 if ok else 1)
+
+    if args.remove_startup:
+        from transient_thoughts import startup
+        ok, msg = startup.unregister()
+        print(msg)
+        sys.exit(0 if ok else 1)
 
     if args.view:
         storage = ThoughtStorage()
