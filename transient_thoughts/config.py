@@ -14,6 +14,10 @@ DB_DIR = pathlib.Path(
 ) / "transient-thoughts"
 DB_PATH = DB_DIR / "thoughts.db"
 
-# Minutes between notifications nudging the user to record a thought. Can also be 
+# Minutes between notifications nudging the user to record a thought. Can also be
 # overridden at runtime via --interval.
 DEFAULT_INTERVAL_MINUTES = 30
+
+# System-wide hotkey that summons the entry panel from any app. Uses pynput's
+# GlobalHotKeys syntax so it can be passed straight into the listener.
+GLOBAL_HOTKEY = "<ctrl>+<alt>+t"

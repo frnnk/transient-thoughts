@@ -24,6 +24,7 @@ class TransientThoughtsApp:
         self._prompt_lock = threading.Lock()
         self._stop_event = threading.Event()
         self._ctrl_handler_ref = None  # holds the Windows ctypes callback alive
+        self._hotkey_listener = None   # pynput GlobalHotKeys listener, started in start()
 
     def start(self):
         self._tray = TrayIcon(
@@ -33,6 +34,7 @@ class TransientThoughtsApp:
             on_quit=self._on_quit,
         )
         self._install_interrupt_handler()
+        self._install_global_hotkey()
         self._timer_thread = threading.Thread(target=self._timer_loop, daemon=True)
         self._timer_thread.start()
         self._tray.run()  # blocks
@@ -65,6 +67,24 @@ class TransientThoughtsApp:
                 trigger_quit()
             signal.signal(signal.SIGINT, _handler)
             signal.signal(signal.SIGTERM, _handler)
+
+    def _install_global_hotkey(self):
+        """Register a system-wide hotkey that opens the entry panel from anywhere.
+        pynput runs the listener in its own thread; _on_prompt is already
+        re-entrancy-safe via _prompt_lock so duplicate presses are harmless."""
+        try:
+            from pynput import keyboard
+        except ImportError:
+            return  # hotkey is a nice-to-have; don't crash if pynput is missing
+        try:
+            self._hotkey_listener = keyboard.GlobalHotKeys({
+                config.GLOBAL_HOTKEY: self._on_prompt,
+            })
+            self._hotkey_listener.start()
+        except Exception:
+            # OS may refuse the binding (e.g. another app owns it). Silent-fail
+            # rather than blocking startup — user still has tray + toast paths.
+            self._hotkey_listener = None
 
     def _timer_loop(self):
         while not self._stop_event.is_set():
@@ -142,4 +162,6 @@ class TransientThoughtsApp:
 
     def _on_quit(self):
         self._stop_event.set()
+        if self._hotkey_listener is not None:
+            self._hotkey_listener.stop()
         self._tray.stop()

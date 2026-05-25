@@ -37,6 +37,35 @@ def _enable_windows_dpi_awareness():
         pass
 
 
+def _force_foreground_windows(hwnd):
+    """Bypass Windows' foreground-lock so the entry card actually grabs keyboard
+    focus when summoned from a background context (global hotkey). focus_force()
+    alone fails because SetForegroundWindow is blocked unless the calling thread
+    owns recent input — which it doesn't when pynput's hook consumed the key.
+    Attaching our thread input to the current foreground thread sidesteps the
+    check; we detach immediately after."""
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+        user32 = ctypes.windll.user32
+        kernel32 = ctypes.windll.kernel32
+        fg = user32.GetForegroundWindow()
+        fg_thread = user32.GetWindowThreadProcessId(fg, 0)
+        cur_thread = kernel32.GetCurrentThreadId()
+        if fg_thread and fg_thread != cur_thread:
+            user32.AttachThreadInput(fg_thread, cur_thread, True)
+            try:
+                user32.BringWindowToTop(hwnd)
+                user32.SetForegroundWindow(hwnd)
+            finally:
+                user32.AttachThreadInput(fg_thread, cur_thread, False)
+        else:
+            user32.SetForegroundWindow(hwnd)
+    except Exception:
+        pass
+
+
 def _tk_dpi_scale(root):
     """Return a pixel scale factor (1.0 at 96 DPI, 1.5 at 144 DPI, etc.) and sync
     Tk's point-based font scaling to match. Call right after creating the root."""
@@ -174,6 +203,7 @@ def show_input_window(on_submit, on_view=None, on_quit=None, on_settings=None, p
     # Grab OS-level focus (tray-icon callbacks don't auto-focus on Windows), then
     # direct the keyboard focus to the text widget so the user can type immediately.
     def grab_focus():
+        _force_foreground_windows(root.winfo_id())
         root.focus_force()
         text_widget.focus_set()
     root.after(10, grab_focus)
