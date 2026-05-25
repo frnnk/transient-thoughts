@@ -11,6 +11,7 @@ Sits quietly in your system tray. Every so often, an unintrusive Windows toast a
 **Capture**
 - Tray-resident; no taskbar clutter
 - Click the Windows toast or the tray icon to open the prompt
+- Global hotkey `Ctrl+Alt+T` opens the prompt from any app
 - Multi-line text box (wraps to 3 visible lines, scrolls beyond)
 - Enter saves, Escape cancels
 
@@ -33,6 +34,7 @@ Sits quietly in your system tray. Every so often, an unintrusive Windows toast a
 
 | Panel | Key | Action |
 |---|---|---|
+| _anywhere_ | `Ctrl+Alt+T` | open the input prompt from any app |
 | Input | `Enter` | save and close |
 | Input | `Esc` | cancel |
 | Input | `↑` / `↓` | scroll the text box |
