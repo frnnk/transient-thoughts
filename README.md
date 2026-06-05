@@ -122,6 +122,18 @@ Re-run the same command anytime to pull the latest commit. `--reinstall` is what
 
 After installing, `uv` will tell you if its bin directory isn't on `PATH` yet; follow its hint (typically `uv tool update-shell` and restart your terminal) so the `transient-thoughts` command is reachable.
 
+> **Windows-native only.** The build pulls a Win32 backend (`windows-toasts`, `pynput` Win32). Installing under WSL/Linux fails building `evdev` (`pynput`'s Linux backend) unless `python3-dev` is present — and the tray/toasts won't work there anyway. Install from a native Windows shell.
+
+> **Reinstalling?** Quit the running tray app first (tray icon → Quit). A live instance locks `transient-thoughts.exe`, which makes `--reinstall` fail with `Access is denied (os error 5)` and can leave a broken env. If that happens, run `uv tool uninstall transient-thoughts` (or delete `%APPDATA%\uv\tools\transient-thoughts`) and install fresh.
+
+**Launch in the background** (on demand, no console window):
+
+```bash
+transient-thoughts-gui
+```
+
+The `-gui` variant runs under `pythonw.exe` (no console) — this is the normal way to start the tray app. Plain `transient-thoughts` keeps a console open and is for debugging / `--view`. From Git Bash, append `&` to fully detach.
+
 **Run at every login** (Windows, no terminal window):
 
 ```bash
