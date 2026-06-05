@@ -7,6 +7,7 @@ installs survive new fields being added.
 """
 
 import json
+import os
 from dataclasses import dataclass, asdict
 from pathlib import Path
 
@@ -64,8 +65,14 @@ def load() -> Settings:
 
 
 def save(settings: Settings) -> None:
+    # Atomic write: dump to a temp file in the same directory, then os.replace()
+    # it over the target. os.replace is an atomic rename on POSIX and Windows,
+    # so a concurrent/crashing reader always sees either the complete old file
+    # or the complete new one — never a half-written settings.json.
     SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    SETTINGS_PATH.write_text(
+    tmp_path = SETTINGS_PATH.with_name(SETTINGS_PATH.name + ".tmp")
+    tmp_path.write_text(
         json.dumps(asdict(settings), indent=2),
         encoding="utf-8",
     )
+    os.replace(tmp_path, SETTINGS_PATH)
